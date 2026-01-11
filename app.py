@@ -111,3 +111,17 @@ if "genre" in df.columns:
 # -----------------------------
 st.markdown("---")
 st.caption("📌 IMDb 2024 Data Analysis | Built with Streamlit")
+st.subheader("Movie Dataset Preview")
+
+sort_order = st.selectbox(
+    "Sort by Rating",
+    ["Highest to Lowest", "Lowest to Highest"]
+)
+
+if sort_order == "Highest to Lowest":
+    filtered_df = filtered_df.sort_values(by="rating", ascending=False)
+else:
+    filtered_df = filtered_df.sort_values(by="rating", ascending=True)
+
+st.dataframe(filtered_df)
+
