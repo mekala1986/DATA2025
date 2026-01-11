@@ -124,4 +124,7 @@ else:
     filtered_df = filtered_df.sort_values(by="rating", ascending=True)
 
 st.dataframe(filtered_df)
+filtered_df = filtered_df.sort_values(by="rating", ascending=False).reset_index(drop=True)
+st.dataframe(filtered_df)
+
 
