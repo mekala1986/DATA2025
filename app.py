@@ -75,3 +75,14 @@ plt.xlabel("Rating")
 plt.ylabel("Movie Name")
 plt.title("Movies by Rating (Ascending)")
 st.pyplot(plt)
+# Sort by rating ascending
+sorted_df = filtered_df.sort_values(by='rating', ascending=True)
+
+plt.figure(figsize=(12,8))
+plt.barh(sorted_df['movie_name'], sorted_df['rating'], color='skyblue')
+plt.xlabel("Rating")
+plt.ylabel("Movie Name")
+plt.title("Movies by Rating (Ascending)")
+plt.tight_layout()
+st.pyplot(plt)
+
