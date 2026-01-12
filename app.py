@@ -1,8 +1,7 @@
-# imdb_dashboard.py
+# app.py
 import pandas as pd
 import streamlit as st
 import matplotlib.pyplot as plt
-import seaborn as sns
 
 # -----------------------------
 # Page Configuration
@@ -19,7 +18,7 @@ st.title("🎬 IMDb 2024 Movies Analysis Dashboard")
 # -----------------------------
 @st.cache_data
 def load_data():
-    # Replace with your actual CSV path
+    # Replace with your CSV path
     df = pd.read_csv("movies_2024.csv")
     return df
 
@@ -64,17 +63,8 @@ st.dataframe(filtered_df)
 # -----------------------------
 # Visual Analysis
 # -----------------------------
-st.subheader("📈 Visual Analysis")
+st.subheader("📈 Movies by Rating (Ascending)")
 
-# Sort by rating ascending
-sorted_df = filtered_df.sort_values(by='rating', ascending=True)
-
-plt.figure(figsize=(12,6))
-sns.barplot(x='rating', y='movie_name', data=sorted_df, palette='viridis')
-plt.xlabel("Rating")
-plt.ylabel("Movie Name")
-plt.title("Movies by Rating (Ascending)")
-st.pyplot(plt)
 # Sort by rating ascending
 sorted_df = filtered_df.sort_values(by='rating', ascending=True)
 
@@ -86,3 +76,15 @@ plt.title("Movies by Rating (Ascending)")
 plt.tight_layout()
 st.pyplot(plt)
 
+# -----------------------------
+# Rating Distribution Histogram
+# -----------------------------
+st.subheader("📊 Rating Distribution")
+
+plt.figure(figsize=(10,5))
+plt.hist(filtered_df['rating'], bins=20, color='orange', edgecolor='black')
+plt.xlabel("Rating")
+plt.ylabel("Number of Movies")
+plt.title("IMDb Rating Distribution")
+plt.tight_layout()
+st.pyplot(plt)
