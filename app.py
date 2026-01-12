@@ -1,13 +1,11 @@
-import os
+# imdb_dashboard.py
 import pandas as pd
 import streamlit as st
-# Matplotlib safe backend for Streamlit Cloud
-import matplotlib
-matplotlib.use("Agg")
 import matplotlib.pyplot as plt
+import seaborn as sns
 
 # -----------------------------
-# Page configuration
+# Page Configuration
 # -----------------------------
 st.set_page_config(
     page_title="IMDb 2024 Movies Dashboard",
@@ -17,119 +15,63 @@ st.set_page_config(
 st.title("🎬 IMDb 2024 Movies Analysis Dashboard")
 
 # -----------------------------
-# Load data
+# Load Data
 # -----------------------------
 @st.cache_data
 def load_data():
-    base_dir = os.path.dirname(__file__)
-    csv_path = os.path.join(base_dir, "imdb_2024_cleaned.csv")
-    return pd.read_csv(csv_path)
+    # Replace with your actual CSV path
+    df = pd.read_csv("movies_2024.csv")
+    return df
 
 df = load_data()
 
 # -----------------------------
-# Sidebar filters
+# Sidebar Filters
 # -----------------------------
-st.sidebar.header("🎛 Filter Movies")
+st.sidebar.header("🎯 Filter Movies")
+genres = df['genre'].dropna().unique().tolist()
+selected_genres = st.sidebar.multiselect("Select Genre(s)", genres)
 
-# Year filter (if column exists)
-if "year" in df.columns:
-    year_options = sorted(df["year"].dropna().unique())
-    selected_years = st.sidebar.multiselect(
-        "Select Year(s)", year_options, default=year_options
-    )
-    df = df[df["year"].isin(selected_years)]
-
-# Genre filter (if column exists)
-if "genre" in df.columns:
-    genre_options = sorted(df["genre"].dropna().unique())
-    selected_genres = st.sidebar.multiselect(
-        "Select Genre(s)", genre_options, default=genre_options
-    )
-    df = df[df["genre"].isin(selected_genres)]
-
-# Rating filter (if column exists)
-if "rating" in df.columns:
-    min_rating = float(df["rating"].min())
-    max_rating = float(df["rating"].max())
-    rating_range = st.sidebar.slider(
-        "IMDb Rating Range",
-        min_rating,
-        max_rating,
-        (min_rating, max_rating)
-    )
-    df = df[(df["rating"] >= rating_range[0]) & (df["rating"] <= rating_range[1])]
+rating_range = st.sidebar.slider("IMDb Rating Range", 1.0, 10.0, (1.0, 10.0))
 
 # -----------------------------
-# KPIs
+# Filter Dataset
 # -----------------------------
+filtered_df = df.copy()
+
+# Filter by genre
+if selected_genres:
+    filtered_df = filtered_df[filtered_df['genre'].apply(lambda x: any(g in x for g in selected_genres))]
+
+# Filter by rating
+filtered_df = filtered_df[(filtered_df['rating'] >= rating_range[0]) & (filtered_df['rating'] <= rating_range[1])]
+
+# -----------------------------
+# Metrics
+# -----------------------------
+st.subheader("📊 Summary")
 col1, col2, col3 = st.columns(3)
-
-col1.metric("🎥 Total Movies", len(df))
-if "rating" in df.columns:
-    col2.metric("⭐ Average Rating", round(df["rating"].mean(), 2))
-if "votes" in df.columns:
-    col3.metric("🗳 Total Votes", int(df["votes"].sum()))
+col1.metric("Total Movies", filtered_df.shape[0])
+col2.metric("Average Rating", round(filtered_df['rating'].mean(), 2))
+col3.metric("Total Votes", int(filtered_df['votes'].sum()))
 
 # -----------------------------
-# Data preview
+# Dataset Preview
 # -----------------------------
 st.subheader("📄 Movie Dataset Preview")
-st.dataframe(df.head(20), use_container_width=True)
-
-# -----------------------------
-# Charts
-# -----------------------------
-st.subheader("📊 Visual Analysis")
-
-col4, col5 = st.columns(2)
-
-# Rating distribution
-if "rating" in df.columns:
-    with col4:
-        st.markdown("**Rating Distribution**")
-        fig, ax = plt.subplots()
-        ax.hist(df["rating"].dropna(), bins=10)
-        ax.set_xlabel("IMDb Rating")
-        ax.set_ylabel("Number of Movies")
-        st.pyplot(fig)
-st.subheader("Movie Dataset Preview")
-
-# 🔹 Sort option
-sort_order = st.selectbox(
-    "Order by Rating",
-    ["Highest to Lowest", "Lowest to Highest"]
-)
-
-# 🔹 Apply sorting AFTER filtering
-if sort_order == "Highest to Lowest":
-    filtered_df = filtered_df.sort_values(by="rating", ascending=False)
-else:
-    filtered_df = filtered_df.sort_values(by="rating", ascending=True)
-
-# 🔹 Reset index (THIS IS VERY IMPORTANT)
-filtered_df = filtered_df.reset_index(drop=True)
-
-# 🔹 Display
 st.dataframe(filtered_df)
 
-# Genre count
-if "genre" in df.columns:
-    with col5:
-        st.markdown("**Top Genres**")
-        genre_counts = df["genre"].value_counts().head(10)
-        fig, ax = plt.subplots()
-        genre_counts.plot(kind="bar", ax=ax)
-        ax.set_xlabel("Genre")
-        ax.set_ylabel("Number of Movies")
-        st.pyplot(fig)
-
 # -----------------------------
-# Footer
+# Visual Analysis
 # -----------------------------
-st.markdown("---")
-st.caption("📌 IMDb 2024 Data Analysis | Built with Streamlit")
+st.subheader("📈 Visual Analysis")
 
+# Sort by rating ascending
+sorted_df = filtered_df.sort_values(by='rating', ascending=True)
 
-
-
+plt.figure(figsize=(12,6))
+sns.barplot(x='rating', y='movie_name', data=sorted_df, palette='viridis')
+plt.xlabel("Rating")
+plt.ylabel("Movie Name")
+plt.title("Movies by Rating (Ascending)")
+st.pyplot(plt)
